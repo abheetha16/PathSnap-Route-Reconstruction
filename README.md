@@ -1,19 +1,21 @@
-# Abhay: Data processing and feature engineering
+# Abheek: Model training and comparison
 
-**Stage 1 of 4.** This stage reads the raw trips, projects coordinates to metres, finds candidate road segments for
-every GPS point and computes the 10 features.
+**Stage 2 of 4.** This stage trains five model families on (GPS point, candidate arc) pairs, with 5-fold GroupKFold
+by trip, and scores them on the 10 student-test trips.
+
+Models: Logistic Regression, KNN, Random Forest, LightGBM, MLP.
+Metrics: CV Macro F1, test Macro F1, observation-level Top-1, route continuity, log loss, precision, recall,
+confusion matrix and inference time.
 
 | File | What it does |
 |---|---|
-| `pathsnap/data_processing/loader.py` | `TripData`, `load_trip()`, `project_coordinates()` (WGS-84 metres per degree at the trip's mean latitude) |
-| `pathsnap/feature_engineering/extractor.py` | `CandidateExtractor`: STRtree index, ±40 m candidate query, nearest-arc fallback, 10 features, labels from the route |
-| `pathsnap/feature_engineering/build_dataset.py` | Runs the extractor over all train and student_test trips |
+| `pathsnap/models/train_models.py` | `FEATURE_COLS`, `compute_observation_top1()`, `compute_route_continuity()`, `get_model_definitions()`, `train_and_evaluate_all()` |
 | `pathsnap/paths.py` | Data and artifact locations |
 
-**Input:** `../../Student folder/{train,student_test}` (or `$PATHSNAP_DATA`)
-**Output:** `../artifacts/features_train.parquet`, `../artifacts/features_student_test.parquet`, `../artifacts/results/eda_summary.json`
+**Needs:** Abhay's parquet files in `../artifacts/`, plus the raw `student_test` `.arcs` files for the continuity check.
+**Output:** `../artifacts/trained_models/*.joblib` (5 models + scaler), `../artifacts/results/model_comparison.csv`, `detailed_model_metrics.json`
 
 ```bash
 pip install -r requirements.txt
-python -m pathsnap.feature_engineering.build_dataset
+python -m pathsnap.models.train_models
 ```
